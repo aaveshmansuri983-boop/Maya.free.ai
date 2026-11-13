@@ -24,11 +24,28 @@ jobs:
 
       - name: Apply free app identity
         working-directory: maya-source
+        shell: bash
         run: |
-          sed -i 's/applicationId = "com.maya.ai"/applicationId = "com.maya.ai.free"/' app/build.gradle.kts
-          sed -i 's/<string name="app_name">Maya AI<\\/string>/<string name="app_name">Maya AI Free<\\/string>/' app/src/main/res/values/strings.xml
-          grep -q 'applicationId = "com.maya.ai.free"' app/build.gradle.kts
-          grep -q 'Maya AI Free' app/src/main/res/values/strings.xml
+          python3 - <<'PY'
+          from pathlib import Path
+          gradle = Path("app/build.gradle.kts")
+          gradle_text = gradle.read_text()
+          old_id = 'applicationId = "com.maya.ai"'
+          new_id = 'applicationId = "com.maya.ai.free"'
+          if old_id in gradle_text:
+              gradle_text = gradle_text.replace(old_id, new_id)
+          if new_id not in gradle_text:
+              raise SystemExit("Could not verify applicationId in app/build.gradle.kts")
+          gradle.write_text(gradle_text)
+
+          strings = Path("app/src/main/res/values/strings.xml")
+          xml = strings.read_text()
+          xml = xml.replace('<string name="app_name">Maya AI</string>',
+                            '<string name="app_name">Maya AI Free</string>')
+          if "Maya AI Free" not in xml:
+              raise SystemExit("Could not set app_name in strings.xml")
+          strings.write_text(xml)
+          PY
 
       - name: Set up Java 17
         uses: actions/setup-java@v4
