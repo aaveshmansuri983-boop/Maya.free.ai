@@ -1,0 +1,54 @@
+name: Build Maya AI Free APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Maya AI Free build config
+        uses: actions/checkout@v4
+
+      - name: Checkout upstream Maya source
+        uses: actions/checkout@v4
+        with:
+          repository: piashmsubd/Maya-ai-automation-android
+          ref: master
+          path: maya-source
+
+      - name: Apply free app identity
+        working-directory: maya-source
+        run: |
+          sed -i 's/applicationId = "com.maya.ai"/applicationId = "com.maya.ai.free"/' app/build.gradle.kts
+          sed -i 's/<string name="app_name">Maya AI<\\/string>/<string name="app_name">Maya AI Free<\\/string>/' app/src/main/res/values/strings.xml
+          grep -q 'applicationId = "com.maya.ai.free"' app/build.gradle.kts
+          grep -q 'Maya AI Free' app/src/main/res/values/strings.xml
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build debug APK
+        working-directory: maya-source
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Maya-AI-Free-debug
+          path: maya-source/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
