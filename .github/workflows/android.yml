@@ -55,15 +55,13 @@ jobs:
           from pathlib import Path
           p = Path("app/build.gradle.kts")
           s = p.read_text()
-          old = """        release {
-            isMinifyEnabled = true"""
-          new = """        release {
-            // Temporary installable CI signing. Replace with a private release keystore before public distribution.
-            signingConfig = signingConfigs.getByName("debug")
-            isMinifyEnabled = false"""
-          if old not in s:
-              raise SystemExit("Release build block did not match expected source; refusing unsafe patch")
-          p.write_text(s.replace(old, new, 1))
+          import re
+          pattern = r'(release\s*\{\s*)isMinifyEnabled\s*=\s*true'
+          replacement = r'\1// Temporary installable CI signing; use a private keystore for distribution.\n            signingConfig = signingConfigs.getByName("debug")\n            isMinifyEnabled = false'
+          updated, count = re.subn(pattern, replacement, s, count=1)
+          if count != 1:
+              raise SystemExit("Could not safely locate release buildType block")
+          p.write_text(updated)
           PY
 
       - name: Set up Java 17
