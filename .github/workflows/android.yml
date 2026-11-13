@@ -58,7 +58,7 @@ jobs:
           from pathlib import Path
           p = Path("app/src/main/AndroidManifest.xml")
           s = p.read_text()
-          s = s.replace('android:allowBackup="true"', 'android:allowBackup="true"\\n        android:usesCleartextTraffic="true"')
+          s = s.replace('android:allowBackup="true"', 'android:allowBackup="true"\n        android:usesCleartextTraffic="true"')
           p.write_text(s)
           PY
 
