@@ -47,6 +47,21 @@ jobs:
           strings.write_text(xml)
           PY
 
+      - name: Apply Maya chat, voice and orb fixes
+        working-directory: maya-source
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp ../patches/ChatScreen.kt app/src/main/java/com/maya/ai/presentation/chat/ChatScreen.kt
+          cp ../patches/SettingsScreen.kt app/src/main/java/com/maya/ai/presentation/settings/SettingsScreen.kt
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+          s = s.replace('android:allowBackup="true"', 'android:allowBackup="true"\n        android:usesCleartextTraffic="true"')
+          p.write_text(s)
+          PY
+
       - name: Configure installable release signing
         working-directory: maya-source
         shell: bash
